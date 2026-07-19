@@ -16,39 +16,39 @@ st.markdown("### Exploratory Data Analysis using Python & Streamlit")
 # -----------------------------------
 # Load Dataset
 # -----------------------------------
-import os
-import glob
 import pandas as pd
-import streamlit as st
+import zipfile
+import glob
+import os
 
-@st.cache_data
 def load_data():
 
-    # Folder where app.py is located
     base_path = os.path.dirname(os.path.abspath(__file__))
 
-    # Read all CSV files in the project folder
-    csv_files = glob.glob(os.path.join(base_path, "*.csv"))
+    zip_files = glob.glob(os.path.join(base_path, "*.zip"))
 
-    if not csv_files:
-        st.error("No CSV files found!")
+    if len(zip_files) == 0:
+        st.error("No ZIP files found!")
         st.stop()
 
-    # Read all CSV files
     df_list = []
 
-    for file in csv_files:
-        temp = pd.read_csv(file)
-        df_list.append(temp)
+    for file in sorted(zip_files):
 
-    # Merge all files
+        with zipfile.ZipFile(file) as z:
+
+            csv_name = z.namelist()[0]
+
+            with z.open(csv_name) as f:
+                df = pd.read_csv(f)
+
+            df_list.append(df)
+
     df = pd.concat(df_list, ignore_index=True)
 
-    # Convert datetime columns
     df["start_time"] = pd.to_datetime(df["start_time"])
     df["end_time"] = pd.to_datetime(df["end_time"])
 
-    # Feature Engineering
     df["duration_min"] = df["duration_sec"] / 60
     df["hour"] = df["start_time"].dt.hour
     df["weekday"] = df["start_time"].dt.day_name()
@@ -57,9 +57,8 @@ def load_data():
 
     return df
 
-
-# Load dataset
 df = load_data()
+
 # -----------------------------------
 # Sidebar
 # -----------------------------------
