@@ -24,24 +24,27 @@ import streamlit as st
 @st.cache_data
 def load_data():
 
-    # Get the directory where appp.py is located
+    # Folder where app.py is located
     base_path = os.path.dirname(os.path.abspath(__file__))
 
-    # Path to the data folder
-    data_path = os.path.join(base_path, "data")
-
-    # Read all CSV files from data folder
-    csv_files = glob.glob(os.path.join(data_path, "*.csv"))
+    # Read all CSV files in the project folder
+    csv_files = glob.glob(os.path.join(base_path, "*.csv"))
 
     if not csv_files:
-        st.error(f"No CSV files found in: {data_path}")
+        st.error("No CSV files found!")
         st.stop()
 
-    df_list = [pd.read_csv(file) for file in csv_files]
+    # Read all CSV files
+    df_list = []
 
+    for file in csv_files:
+        temp = pd.read_csv(file)
+        df_list.append(temp)
+
+    # Merge all files
     df = pd.concat(df_list, ignore_index=True)
 
-    # Convert date columns
+    # Convert datetime columns
     df["start_time"] = pd.to_datetime(df["start_time"])
     df["end_time"] = pd.to_datetime(df["end_time"])
 
@@ -53,9 +56,10 @@ def load_data():
     df["member_age"] = 2018 - df["member_birth_year"]
 
     return df
-# Load the dataset
-df = load_data()
 
+
+# Load dataset
+df = load_data()
 # -----------------------------------
 # Sidebar
 # -----------------------------------
